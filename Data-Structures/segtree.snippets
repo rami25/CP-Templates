@@ -1,0 +1,381 @@
+snippet Seg
+template<class Info> struct SegmentTree { ${0: }
+    int n;
+    std::vector<Info> info;
+    SegmentTree() : n(0) {}
+    SegmentTree(int n_, Info v_ = Info()) {
+        init(n_, v_);
+    }
+    template<class T>
+    SegmentTree(std::vector<T> init_) {
+        init(init_);
+    }
+    void init(int n_, Info v_ = Info()) {
+        init(std::vector(n_, v_));
+    }
+    template<class T>
+    void init(std::vector<T> init_) {
+        n = init_.size();
+        info.assign(4 << std::__lg(n), Info());
+        std::function<void(int, int, int)> build = [&](int p, int l, int r) {
+            if (r - l == 1) {
+                info[p] = init_[l];
+                return;
+            }
+            int m = (l + r) / 2;
+            build(2 * p, l, m);
+            build(2 * p + 1, m, r);
+            pull(p);
+        };
+        build(1, 0, n);
+    }
+    void pull(int p) {
+        info[p] = info[2 * p] + info[2 * p + 1];
+    }
+    void modify(int p, int l, int r, int x, const Info &v) {
+        if (r - l == 1) {
+            info[p] = v;
+            return;
+        }
+        int m = (l + r) / 2;
+        if (x < m) {
+            modify(2 * p, l, m, x, v);
+        } else {
+            modify(2 * p + 1, m, r, x, v);
+        }
+        pull(p);
+    }
+    void modify(int p, const Info &v) {
+        modify(1, 0, n, p, v);
+    }
+    Info rangeQuery(int p, int l, int r, int x, int y) {
+        if (l >= y || r <= x) {
+            return Info();
+        }
+        if (l >= x && r <= y) {
+            return info[p];
+        }
+        int m = (l + r) / 2;
+        return rangeQuery(2 * p, l, m, x, y) + rangeQuery(2 * p + 1, m, r, x, y);
+    }
+    Info rangeQuery(int l, int r) {
+        return rangeQuery(1, 0, n, l, r);
+    }
+    template<class F>
+    int findFirst(int p, int l, int r, int x, int y, F &&pred) {
+        if (l >= y || r <= x) {
+            return -1;
+        }
+        if (l >= x && r <= y && !pred(info[p])) {
+            return -1;
+        }
+        if (r - l == 1) {
+            return l;
+        }
+        int m = (l + r) / 2;
+        int res = findFirst(2 * p, l, m, x, y, pred);
+        if (res == -1) {
+            res = findFirst(2 * p + 1, m, r, x, y, pred);
+        }
+        return res;
+    }
+    template<class F>
+    int findFirst(int l, int r, F &&pred) {
+        return findFirst(1, 0, n, l, r, pred);
+    }
+    template<class F>
+    int findLast(int p, int l, int r, int x, int y, F &&pred) {
+        if (l >= y || r <= x) {
+            return -1;
+        }
+        if (l >= x && r <= y && !pred(info[p])) {
+            return -1;
+        }
+        if (r - l == 1) {
+            return l;
+        }
+        int m = (l + r) / 2;
+        int res = findLast(2 * p + 1, m, r, x, y, pred);
+        if (res == -1) {
+            res = findLast(2 * p, l, m, x, y, pred);
+        }
+        return res;
+    }
+    template<class F>
+    int findLast(int l, int r, F &&pred) {
+        return findLast(1, 0, n, l, r, pred);
+    }
+};
+
+endsnippet
+snippet segt
+template <class S, S (*op)(S, S), S (*e)()> struct segtree { 
+  public:
+    segtree() : segtree(0) {}
+    explicit segtree(int n) : segtree(std::vector<S>(n, e())) {}
+    explicit segtree(const std::vector<S>& v) : _n(int(v.size())) {
+		log = ceil(log2(_n));
+        size = 1 << log;
+        d = std::vector<S>(2 * size, e());
+        for (int i = 0; i < _n; i++) d[size + i] = v[i];
+        for (int i = size - 1; i >= 1; i--) {
+            update(i);
+        }
+    }
+
+    void modify(int p, S x) {
+        assert(0 <= p && p < _n);
+        p += size;
+        d[p] = x;
+        for (int i = 1; i <= log; i++) update(p >> i);
+    }
+
+    S get(int p) const {
+        assert(0 <= p && p < _n);
+        return d[p + size];
+    }
+
+    S query(int l, int r) const {
+        assert(0 <= l && l <= r && r <= _n);
+        S sml = e(), smr = e();
+        l += size;
+        r += size;
+
+        while (l < r) {
+            if (l & 1) sml = op(sml, d[l++]);
+            if (r & 1) smr = op(d[--r], smr);
+            l >>= 1;
+            r >>= 1;
+        }
+        return op(sml, smr);
+    }
+
+    S root() const { return d[1]; }
+
+    template <bool (*f)(S)> int max_right(int l) const {
+        return max_right(l, [](S x) { return f(x); });
+    }
+    template <class F> int max_right(int l, F f) const {
+        assert(0 <= l && l <= _n);
+        assert(f(e()));
+        if (l == _n) return _n;
+        l += size;
+        S sm = e();
+        do {
+            while (l % 2 == 0) l >>= 1;
+            if (!f(op(sm, d[l]))) {
+                while (l < size) {
+                    l = (2 * l);
+                    if (f(op(sm, d[l]))) {
+                        sm = op(sm, d[l]);
+                        l++;
+                    }
+                }
+                return l - size;
+            }
+            sm = op(sm, d[l]);
+            l++;
+        } while ((l & -l) != l);
+        return _n;
+    }
+
+    template <bool (*f)(S)> int min_left(int r) const {
+        return min_left(r, [](S x) { return f(x); });
+    }
+    template <class F> int min_left(int r, F f) const {
+        assert(0 <= r && r <= _n);
+        assert(f(e()));
+        if (r == 0) return 0;
+        r += size;
+        S sm = e();
+        do {
+            r--;
+            while (r > 1 && (r % 2)) r >>= 1;
+            if (!f(op(d[r], sm))) {
+                while (r < size) {
+                    r = (2 * r + 1);
+                    if (f(op(d[r], sm))) {
+                        sm = op(d[r], sm);
+                        r--;
+                    }
+                }
+                return r + 1 - size;
+            }
+            sm = op(d[r], sm);
+        } while ((r & -r) != r);
+        return 0;
+    }
+
+  private:
+    int _n, size, log;
+    std::vector<S> d;
+
+    void update(int k) { d[k] = op(d[2 * k], d[2 * k + 1]); }
+};
+
+using S = ${0: };
+
+S op(S a, S b) {
+    return a+b;
+}
+
+S e() {
+    return 0;
+}
+
+using seg = segtree<S, op, e>;
+
+endsnippet
+
+snippet seg
+template <typename T = int> struct segtree {
+	T op(T a, T b) {
+		return ${1:max}(a, b);
+	}
+
+	T e() {
+		return numeric_limits<T>::${2:min}();
+	}
+ 
+    int n;
+    vector<T> st;
+ 
+	segtree(int _n) : n(_n), st(2*_n, e()) {}
+ 
+    segtree(const vector<T> &ar) {
+        n = int(ar.size());
+        st.resize(2*n);
+        for (int i = 0; i < n; i++) {
+            st[i+n] = ar[i];
+        }
+        for (int i = n - 1; i > 0; --i) 
+            st[i] = op(st[i<<1], st[i<<1|1]);
+    }
+ 
+    void modify(int p, T value) {
+        for (st[p += n] = value; p > 1; p >>= 1) 
+            st[p>>1] = op(st[p], st[p^1]);
+    }
+
+	T get(int pos) {
+		return st[pos+n];
+	}
+ 
+    T query(int l, int r) {
+        T res = e();
+        for (l += n, r += n; l < r; l >>= 1, r >>= 1) {
+            if (l&1) res = op(res, st[l++]);
+            if (r&1) res = op(res, st[--r]);
+        }
+        return res;
+    }
+};
+
+endsnippet
+
+
+snippet segr
+template<class Info> struct segtree { ${0: }
+    int n;
+    vector<Info> st;
+    segtree() : n(0) {}
+    segtree(int _n, Info e = Info()) : segtree(vector(_n, e)) {}
+	template <typename T>
+    segtree(const vector<T> &v) : n(int(v.size())) {
+        st.assign(4 << __lg(n), Info());
+        function<void(int, int, int)> build = [&](int p, int l, int r) {
+            if (r - l == 1) return st[p] = v[l], void();
+            int m = (l + r) / 2;
+            build(2 * p, l, m);
+            build(2 * p + 1, m, r);
+            pull(p);
+        };
+        build(1, 0, n);
+    }
+
+    void pull(int p) {
+        st[p] = st[2 * p] + st[2 * p + 1];
+    }
+
+    void modify(int p, const Info &v) {
+        modify(1, 0, n, p, v);
+    }
+    void modify(int p, int l, int r, int x, const Info &v) {
+        if (r - l == 1) return st[p] = v, void();
+        int m = (l + r) / 2;
+        if (x < m) {
+            modify(2 * p, l, m, x, v);
+        } else {
+            modify(2 * p + 1, m, r, x, v);
+        }
+        pull(p);
+    }
+
+    Info query(int l, int r) {
+        return query(1, 0, n, l, r);
+    }
+    Info query(int p, int l, int r, int x, int y) {
+        if (l >= y || r <= x) return Info();
+        if (l >= x && r <= y) return st[p];
+        int m = (l + r) / 2;
+        return query(2 * p, l, m, x, y) + query(2 * p + 1, m, r, x, y);
+    }
+
+    template<class F>
+    int find_first(int l, int r, F &&f) {
+        return findFirst(1, 0, n, l, r, f);
+    }
+    template<class F>
+    int find_first(int p, int l, int r, int x, int y, F &&f) {
+        if (l >= y || r <= x) {
+            return -1;
+        }
+        if (l >= x && r <= y && !f(st[p])) {
+            return -1;
+        }
+        if (r - l == 1) {
+            return l;
+        }
+        int m = (l + r) / 2;
+        int res = findFirst(2 * p, l, m, x, y, f);
+        if (res == -1) {
+            res = findFirst(2 * p + 1, m, r, x, y, f);
+        }
+        return res;
+    }
+
+    template<class F>
+    int find_last(int l, int r, F &&f) {
+        return findLast(1, 0, n, l, r, f);
+    }
+    template<class F>
+    int find_last(int p, int l, int r, int x, int y, F &&f) {
+        if (l >= y || r <= x) {
+            return -1;
+        }
+        if (l >= x && r <= y && !f(st[p])) {
+            return -1;
+        }
+        if (r - l == 1) {
+            return l;
+        }
+        int m = (l + r) / 2;
+        int res = findLast(2 * p + 1, m, r, x, y, f);
+        if (res == -1) {
+            res = findLast(2 * p, l, m, x, y, f);
+        }
+        return res;
+    }
+};
+
+struct Info {
+	Info () {}
+};
+
+Info operator+(const Info &a, const Info &b) {
+	Info res;
+	// merging operation
+	return res;
+}
+
+endsnippet
