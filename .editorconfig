@@ -1,0 +1,19 @@
+# EditorConfig is awesome: https://editorconfig.org
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+tab_width = 4
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+# Set specific rules for C++, C files, Python, etc.
+[*.cpp]
+indent_style = space
+indent_size = 4
+
+[*.h]
+indent_style = space
+indent_size = 4
