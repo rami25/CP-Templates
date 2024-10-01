@@ -1,4 +1,4 @@
-template<class Info> struct segtree { 
+template <class Info> struct segtree { 
     int n;
     vector<Info> st;
     segtree() : n(0) {}
@@ -44,11 +44,11 @@ template<class Info> struct segtree {
         return query(2 * p, l, m, x, y) + query(2 * p + 1, m, r, x, y);
     }
 
-    template<class F>
+    template <class F>
     int find_first(int l, int r, F &&f) {
-        return findFirst(1, 0, n, l, r, f);
+        return find_first(1, 0, n, l, r, f);
     }
-    template<class F>
+    template <class F>
     int find_first(int p, int l, int r, int x, int y, F &&f) {
         if (l >= y || r <= x) {
             return -1;
@@ -60,18 +60,18 @@ template<class Info> struct segtree {
             return l;
         }
         int m = (l + r) / 2;
-        int res = findFirst(2 * p, l, m, x, y, f);
+        int res = find_first(2 * p, l, m, x, y, f);
         if (res == -1) {
-            res = findFirst(2 * p + 1, m, r, x, y, f);
+            res = find_first(2 * p + 1, m, r, x, y, f);
         }
         return res;
     }
 
-    template<class F>
+    template <class F>
     int find_last(int l, int r, F &&f) {
-        return findLast(1, 0, n, l, r, f);
+        return find_last(1, 0, n, l, r, f);
     }
-    template<class F>
+    template <class F>
     int find_last(int p, int l, int r, int x, int y, F &&f) {
         if (l >= y || r <= x) {
             return -1;
@@ -83,9 +83,9 @@ template<class Info> struct segtree {
             return l;
         }
         int m = (l + r) / 2;
-        int res = findLast(2 * p + 1, m, r, x, y, f);
+        int res = find_last(2 * p + 1, m, r, x, y, f);
         if (res == -1) {
-            res = findLast(2 * p, l, m, x, y, f);
+            res = find_last(2 * p, l, m, x, y, f);
         }
         return res;
     }
