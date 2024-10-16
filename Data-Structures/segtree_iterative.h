@@ -1,3 +1,5 @@
+// Source: https://github.com/atcoder/ac-library
+
 template <class Info> struct segtree { 
   public:
     segtree() : segtree(0) {}
