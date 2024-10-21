@@ -131,7 +131,7 @@ struct Tag {
 	Tag() {}
 
     void apply(const Tag &t) {
-		// todo
+		// TODO
     }
 };
 
@@ -139,12 +139,12 @@ struct Info {
     Info() {}
     
     void apply(const Tag &t, int l, int r) {
-		// todo
+		// TODO
     }
 };
 
 Info operator+(const Info &a, const Info &b) {
     Info c;
-	// todo
+	// TODO
     return c;
 }

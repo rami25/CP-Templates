@@ -1,4 +1,4 @@
-template <typename T = long long, class Compare = less<T>> struct topK { 
+template <typename T = long long, class Compare = std::less<T>> struct topK { 
     multiset<T, Compare> s;
     size_t k;
     T total = 0;
@@ -14,7 +14,6 @@ template <typename T = long long, class Compare = less<T>> struct topK {
     }
 
     void erase(T x) {
-		assert(s.count(x));
         if (s.size() <= k) s.erase(s.lower_bound(x)), total -= x;
         else {
             auto it2 = s.lower_bound(x);

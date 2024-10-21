@@ -96,7 +96,7 @@ struct Info {
 };
 
 Info operator+(const Info &a, const Info &b) {
-	Info res;
-	// merging operation
-	return res;
+	Info c;
+	// TODO
+	return c;
 }
