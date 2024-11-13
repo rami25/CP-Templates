@@ -1,37 +1,23 @@
-struct CD { // 0-based
+struct CD { 
+  	int n, root;
 	vector<vector<int>> adj;
-	vector<vector<int>> new_adj;
 	vector<vector<int>> dist;
   	vector<int> par;
   	vector<int> sz;
 	vector<int> depth;
   	vector<bool> vis;
-	vector<int> leaves;
-  	int n, root;
 
-	CD() {}
-
-	CD(int _n) {
-		init(_n);
-	}
-
-	CD(const vector<vector<int>> &_adj) {
-  	    init(_adj);
-  	}
-
-  	void init(int _n) {
+	CD(int _n = 0) {
 		n = _n;
 		adj = vector<vector<int>>(n, vector<int>());
-		new_adj = vector<vector<int>>(n, vector<int>());
-		dist = vector<vector<int>>(__lg(n)+1, vector<int>(n, 0));
+		dist = vector<vector<int>>(__lg(n)+1, vector<int>(n));
   	  	vis.resize(n);
   	  	par.resize(n);
   	  	sz.resize(n);
 		depth.resize(n);
-  	}
+	}
 
-  	void init(const vector<vector<int>> &_adj) {
-  	    init(int(_adj.size()));
+	CD(const vector<vector<int>> &_adj) : CD(int(_adj.size())) {
   	    adj = _adj;
   	}
 
@@ -41,48 +27,41 @@ struct CD { // 0-based
   	}
 
 	void build() {
-		root = init_centroid();
+		root = decompose(0, -1, 0);
 	}
 
-  	int find_size(int v, int p, int h) {
-		if (vis[v]) return 0;
+  	int get_sz(int v, int p, int h) {
 		if (~h) dist[h][v] = dist[h][p] + 1; 
   	  	sz[v] = 1;
-  	  	for (int x: adj[v]) {
-			if (x != p) {
-				sz[v] += find_size(x, v, h);
+  	  	for (int u: adj[v]) {
+			if (!vis[u] && u^p) {
+				sz[v] += get_sz(u, v, h);
 			}
   	  	}
   	  	return sz[v];
   	}
 
-  	int find_centroid(int v, int p, int n) {
-		for (int x: adj[v]) {
-			if (x != p) {
-				if (!vis[x] && sz[x] > n) {
-					return find_centroid(x, v, n);
-				}
+  	int get_centroid(int v, int p, int z) {
+		for (int u: adj[v]) {
+			if (!vis[u] && u^p && sz[u] > z) {
+				return get_centroid(u, v, z);
 			}
   	  	}
   	  	return v;
   	}
 
-  	int init_centroid(int v = 0, int p = -1, int d = 0) {
-		int c = find_centroid(v, p, find_size(v, p, ~p?depth[p]:-1)>>1);
+  	int decompose(int v, int p, int d) {
+		int z = get_sz(v, p, ~p ? depth[p] : -1);
+		int c = get_centroid(v, p, z >> 1);
   	  	vis[c] = true;
   	  	par[c] = p;
 		depth[c] = d;
 
-		bool isLeaf = 1;
-  	  	for (int x: adj[c]) {
-			if (!vis[x]) {
-				isLeaf = 0;
-				new_adj[c].push_back(x);
-				new_adj[x].push_back(c);
-				init_centroid(x, c, d+1);
+  	  	for (int u: adj[c]) {
+			if (!vis[u]) {
+				decompose(u, c, d+1);
 			}
   	  	}
-		if(isLeaf) leaves.push_back(c);
 		return c;
   	}
 
@@ -90,7 +69,6 @@ struct CD { // 0-based
 		if (depth[u] < depth[v]) swap(u, v);
 		while (depth[u] != depth[v]) u = par[u];
 		if (u == v) return u;
-
 		while (u != v) {
 			u = par[u];
 			v = par[v];
@@ -103,7 +81,5 @@ struct CD { // 0-based
 		return dist[depth[l]][u] + dist[depth[l]][v];
 	}
 
-	int operator[](int u) {
-		return par[u]; 
-	}
+	int operator[](int u) { return par[u]; }
 };

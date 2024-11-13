@@ -1,27 +1,26 @@
-template <class T = int, bool maximum_mode = false> struct RMQ { // 0-based
+template <class T = int, bool maximum = false> struct RMQ { 
 	int n;
 	vector<vector<T>> rmq;
 
 	RMQ() {}
 
-  	RMQ(const vector<T> &v) {
-		n = int(v.size());
+  	RMQ(const vector<T> &v) : n(v.size()) {
         rmq = vector<vector<T>>(__lg(n)+1, vector<T>(n));
 		rmq[0] = v;
-  	  	for (int i = 0; i < int(rmq.size())-1; ++i) {
-			for (int j = 0; j <= n - (1 << i); ++j) {
-  	    	  rmq[i + 1][j] = op(rmq[i][j], rmq[i][j + (1 << i)]);
+  	  	for (size_t i = 1; i < rmq.size(); i++) {
+			for (int j = 0; j+(1<<i) <= n; j++) {
+				rmq[i][j] = op(rmq[i-1][j], rmq[i-1][j + (1 << (i-1))]);
   	    	}
 		}
   	}
 
-  	T query(int a, int b) const { // [a, b)
-        assert(0 <= a && a < b && b <= n);
-  	  	int dep = 31 - __builtin_clz(b - a); 
-  	  	return op(rmq[dep][a], rmq[dep][b - (1 << dep)]);
+  	T query(int l, int r) const { // [l, r)
+        assert(0 <= l && l < r && r <= n);
+        int sz = __lg(r-l);
+  	  	return op(rmq[sz][l], rmq[sz][r - (1 << sz)]);
   	}
 
-	static T op(T a, T b) {
-		return maximum_mode? max(a, b) : min(a, b);
+	static T op(const T &a, const T &b) {
+		return maximum ? max(a, b) : min(a, b);
 	}
 };
