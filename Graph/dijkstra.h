@@ -17,7 +17,7 @@ template <class T = long long, bool directed = false> struct DJ { // 0 or 1-inde
 
     void add_edge(int from, int to, T dist) {
         edges[from].emplace_back(to, dist);
-        if (directed) edges[to].emplace_back(from, dist);
+        if (!directed) edges[to].emplace_back(from, dist);
     }
 
     vector<T> dist(vector<int> sources) {

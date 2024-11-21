@@ -72,7 +72,7 @@ template <class Info, class Tag> struct lsegtree {
     }
 
     Info query(int l, int r) {
-		assert(0 <= l && l <= r; && r <= n);
+		assert(0 <= l && l <= r && r <= n);
 		if (l == r) return Info();
         return query(1, 0, n, l, r);
     }

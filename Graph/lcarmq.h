@@ -1,34 +1,33 @@
-template <class T = int, bool maximum_mode = false> struct RMQ { // 0-based
+template <class T = int, bool maximum = false> struct RMQ { 
 	int n;
 	vector<vector<T>> rmq;
 
 	RMQ() {}
 
-  	RMQ(const vector<T> &v) {
-		n = int(v.size());
+  	RMQ(const vector<T> &v) : n(v.size()) {
         rmq = vector<vector<T>>(__lg(n)+1, vector<T>(n));
 		rmq[0] = v;
-  	  	for (int i = 0; i < int(rmq.size())-1; ++i) {
-			for (int j = 0; j <= n - (1 << i); ++j) {
-  	    	  rmq[i + 1][j] = op(rmq[i][j], rmq[i][j + (1 << i)]);
+  	  	for (size_t i = 1; i < rmq.size(); i++) {
+			for (int j = 0; j+(1<<i) <= n; j++) {
+				rmq[i][j] = op(rmq[i-1][j], rmq[i-1][j + (1 << (i-1))]);
   	    	}
 		}
   	}
 
-  	T query(int a, int b) const { // [a, b)
-        assert(0 <= a && a < b && b <= n);
-  	  	int dep = 31 - __builtin_clz(b - a); 
-  	  	return op(rmq[dep][a], rmq[dep][b - (1 << dep)]);
+  	T query(int l, int r) const { // [l, r)
+        assert(0 <= l && l < r && r <= n);
+        int sz = __lg(r-l);
+  	  	return op(rmq[sz][l], rmq[sz][r - (1 << sz)]);
   	}
 
-	static T op(T a, T b) {
-		return maximum_mode? max(a, b) : min(a, b);
+	static T op(const T &a, const T &b) {
+		return maximum ? max(a, b) : min(a, b);
 	}
 };
 
-struct LCA { // 0 or 1-indexed
-    int n;
-    vector<vector<int>> jump;
+struct LCA {  
+    int n, Log;
+    vector<vector<int>> up;
     vector<vector<int>> adj;
     vector<int> depth, tin, tout;
     vector<pair<int, int>> tour;
@@ -37,63 +36,60 @@ struct LCA { // 0 or 1-indexed
 	LCA() {}
 
     LCA(int _n) {
-		init(_n);
-	}
-
-    LCA(const vector<vector<int>> &_adj) {
-		init(_adj);
-    }
-
-	void init(int _n) {
-        n = _n+1;
-        jump = vector<vector<int>>(__lg(n-1)+1, vector<int>(n));
+        n = _n;
+		Log = __lg(n);
+        up = vector<vector<int>>(Log+1, vector<int>(n, -1));
         adj.resize(n);
         depth.resize(n);
         tin.resize(n);
         tout.resize(n);
 	}
 
-	void init(const vector<vector<int>> &_adj) {
-		init(int(_adj.size()));
+    LCA(const vector<vector<int>> &_adj) : LCA(int(_adj.size())) {
 		adj = _adj;
-	}
+    }
 
     void add_edge(int a, int b) {
         adj[a].push_back(b);
         adj[b].push_back(a);
     }
 
-    void dfs(int cur, int parent = -1, int cur_depth = 0) {
-        tin[cur] = tout[cur] = tour.size();
-        tour.emplace_back(cur_depth, cur);
-        depth[cur] = cur_depth;
-        jump[0][cur] = parent;
-        for (int i=1; i<int(jump.size()); i++) jump[i][cur] = jump[i-1][cur] == -1 ? -1 : jump[i-1][jump[i-1][cur]];
-        for (int node : adj[cur]) {
-            if (node != parent) {
-                dfs(node, cur, cur_depth+1);
-                tout[cur] = tour.size();
-                tour.emplace_back(cur_depth, cur);
+    void build(int root = 0) {
+        dfs(root, -1, 0);
+		rmq = RMQ<pair<int,int>>(tour);
+    }
+
+	void dfs(int v, int p, int d) {
+        tin[v] = tout[v] = tour.size();
+        tour.emplace_back(d, v);
+        depth[v] = d;
+        up[0][v] = p;
+		for (int i = 1; i <= Log; i++) {
+			if (~up[i-1][v]) {
+				up[i][v] = up[i-1][up[i-1][v]];
+			}
+		}
+        for (int u : adj[v]) {
+			if (u^p) {
+                dfs(u, v, d+1);
+                tout[v] = tour.size();
+                tour.emplace_back(d, v);
             }
         }
     }
 
-    void build(int root = 1) {
-        dfs(root);
-		rmq = RMQ<pair<int,int>>(tour);
-    }
 
-    int ancestor(int node, int k) { // find k-th ancestor of node
-        for (int i=0; i<int(jump.size()); i++) {
-            if ((k&(1<<i)) && node != -1) node = jump[i][node];
+    int ancestor(int v, int k) { 
+		for (int i = 0; i <= Log && ~v; i++) {
+            if (k & (1<<i)) v = up[i][v];
         }
-        return node;
+        return v;
     }
 
     int lca(int x, int y) {
-        int a = tin[x], b = tin[y];
-        if (a > b) swap(a, b);
-        return rmq.query(a, b+1).second;
+        x = tin[x], y = tin[y];
+        if (x > y) swap(x, y);
+        return rmq.query(x, y+1).second;
     }
 
     int dist(int x, int y) {
