@@ -1,75 +1,82 @@
-template <class T = long long, bool directed = false> struct DJ { // 0 or 1-indexed
+template <class T>
+struct edge {
+	int to;
+	T cost;
+	edge() {}
+	edge(int to, T cost) : to(to), cost(cost) {}
+};
+
+template <class T = long long, bool directed = false>
+struct DJ { 
     int n;
-    vector<vector<pair<int,T>>> edges;
+    vector<vector<edge<T>>> adj;
     const T INF = numeric_limits<T>::max()/2;
 
     DJ() {}
 
     DJ(int _n) {
         n = _n;
-        edges.resize(n+1);
+        adj.resize(n);
     }
 
-    DJ(const vector<vector<pair<int,T>>> &_adj) {
+    DJ(const vector<vector<edge<T>>> &_adj) {
 		n = int(_adj.size());
-		edges = _adj;
+		adj = _adj;
     }
 
     void add_edge(int from, int to, T dist) {
-        edges[from].emplace_back(to, dist);
-        if (!directed) edges[to].emplace_back(from, dist);
+        adj[from].emplace_back(to, dist);
+        if (!directed) adj[to].emplace_back(from, dist);
     }
 
-    vector<T> dist(vector<int> sources) {
-        vector<T> res(n+1, INF);
+    vector<T> dist(const vector<int> &sources) {
+        vector<T> res(n, INF);
         priority_queue<pair<T, int>, vector<pair<T, int>>, greater<pair<T, int>>> pq;
-        for (int source : sources) {
-            res[source] = 0;
-            pq.push({0, source});
+        for (int src : sources) {
+            res[src] = 0;
+            pq.push({0, src});
         }
         while (!pq.empty()) {
-            auto cur = pq.top();
-            pq.pop();
+            auto cur = pq.top(); pq.pop();
             if (cur.first > res[cur.second]) continue;
-            for (auto [node, weight] : edges[cur.second]) {
-                if (res[node] > cur.first + weight) {
-                    res[node] = cur.first + weight;
-                    pq.push({res[node], node});
+            for (auto e : adj[cur.second]) {
+                if (res[e.to] > cur.first + e.cost) {
+                    res[e.to] = cur.first + e.cost;
+                    pq.push({res[e.to], e.to});
                 }
             }
         }
-        for (int i = 0; i <= n; i++) {
+        for (int i = 0; i < n; i++) {
             if (res[i] == INF) res[i] = -1;
         }
         return res;
     }
 
-    T dist(int source, int dest) {
-        return dist({source})[dest];
+    T dist(int src, int dest) {
+        return dist({src})[dest];
     }
 
-    pair<T, vector<int>> path(int source, int dest) {
-        // Return the distance from source to dest, along with a shortest path
-        vector<T> res(n+1, INF);
-        vector<int> before(n+1);
+    pair<T, vector<int>> path(int src, int dest) {
+        // Return the distance from src to dest, along with a shortest path
+        vector<T> res(n, INF);
+        vector<int> prv(n);
         priority_queue<pair<T, int>, vector<pair<T, int>>, greater<pair<T, int>>> pq;
-        res[source] = 0;
-        pq.push({0, source});
+        res[src] = 0;
+        pq.push({0, src});
         while (!pq.empty()) {
-            auto cur = pq.top();
-            pq.pop();
+            auto cur = pq.top(); pq.pop();
             if (cur.first > res[cur.second]) continue;
-            for (auto [node, weight] : edges[cur.second]) {
-                if (res[node] > cur.first + weight) {
-                    res[node] = cur.first + weight;
-                    before[node] = cur.second;
-                    pq.push({res[node], node});
+            for (auto e : adj[cur.second]) {
+                if (res[e.to] > cur.first + e.cost) {
+                    res[e.to] = cur.first + e.cost;
+                    prv[e.to] = cur.second;
+                    pq.push({res[e.to], e.to});
                 }
             }
         }
         if (res[dest] == INF) return make_pair(-1, vector<int>());
         vector<int> path = {dest};
-        while (path.back() != source) path.push_back(before[path.back()]);
+        while (path.back() != src) path.push_back(prv[path.back()]);
         reverse(path.begin(), path.end());
         return make_pair(res[dest], path);
     }
