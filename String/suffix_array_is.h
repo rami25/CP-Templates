@@ -1,5 +1,4 @@
-// source : https://github.com/atcoder/ac-library/blob/master/atcoder/string.hpp
-
+//source : https://github.com/atcoder/ac-library/
 namespace sa { 
   vector<int> sa_naive(const vector<int>& s) {
       int n = int(s.size());

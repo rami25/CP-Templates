@@ -1,3 +1,4 @@
+// Source: https://github.com/atcoder/ac-library
 namespace internal {
 
 template <class E> struct csr {

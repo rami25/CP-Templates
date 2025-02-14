@@ -264,7 +264,7 @@ struct Tag {
 struct Info {
     Info() {}
     
-    void apply(const Tag &t, int l, int r) {
+    void apply(const Tag &t, [[maybe_unused]]int l, [[maybe_unused]]int r) {
 		// TODO
     }
 };

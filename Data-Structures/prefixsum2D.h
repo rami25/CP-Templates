@@ -1,4 +1,4 @@
-template <class T = long long> struct psm { // 0-indexed
+template <class T = long long> struct psm { 
     vector<vector<T>> prefix;
 
     psm() {}

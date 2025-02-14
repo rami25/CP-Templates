@@ -1,3 +1,4 @@
+// Source: https://github.com/atcoder/ac-library
 // @param n `n < 2^32`
 // @param m `1 <= m < 2^32`
 // @return sum_{i=0}^{n-1} floor((ai + b) / m) (mod 2^64)

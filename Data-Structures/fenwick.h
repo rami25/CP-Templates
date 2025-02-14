@@ -1,19 +1,16 @@
-template <class T = int> struct fenwick { // 0 or 1-indexed
-	vector<T> bit, val;
+template <class T = int> struct fenwick {
 	int n;
-
+	vector<T> bit, val;
 	fenwick() {};
-
-	fenwick(int N) {
-		n = N+1; 
+	fenwick(int _n) {
+		n = _n+1; 
 		bit.resize(n+1);
 		val.resize(n+1);
 	}
-
-	fenwick(const vector<T> &ar){ 
-		n = int(ar.size());
-		val = ar;
-		bit = ar; bit.insert(bit.begin(), 0);
+	fenwick(const vector<T> &v){ 
+		n = int(v.size());
+		val = v;
+		bit = v; bit.insert(bit.begin(), 0);
 		for(int pos = 1; pos <= n; pos++){
 			int parent = pos+(pos&-pos);
 			if(parent <= n) bit[parent] += bit[pos];

@@ -1,4 +1,4 @@
-template <class T = int> struct sparseMatrix { // 0-indexed
+template <class T = int> struct sparseMatrix { 
     T op(T a, T b) {
         return min(a, b);
     } 

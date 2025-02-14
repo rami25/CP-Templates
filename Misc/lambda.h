@@ -1,5 +1,4 @@
-// lambda for recursive call
-
+// lambda recursive call
 template <class F> struct Function { 
   F f;
   Function(const F &f) : f(f) {} // NOLINT(*-explicit-constructor)

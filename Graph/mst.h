@@ -2,12 +2,12 @@ struct dsu {
 	int n;
 	vector<int> p;
 	dsu(int n = 0) : n(n), p(n, -1) {}
-
+ 
 	int get(int x){
 		assert(0 <= x && x < n);
 		return p[x] < 0? x : p[x] = get(p[x]);
 	}
-
+ 
 	bool merge(int x, int y){
 		assert(0 <= x && x < n);
 		assert(0 <= y && y < n);
@@ -18,35 +18,33 @@ struct dsu {
 		p[y] = x;
 		return true;
 	}
-
+ 
 	bool same(int x, int y){
 		assert(0 <= x && x < n);
 		assert(0 <= y && y < n);
 		return get(x) == get(y);
 	}
-
+ 
 	int size(int x){
 		assert(0 <= x && x < n);
 		return -p[get(x)];
 	}
 };
-
-template <class T> struct MST { 
+ 
+template <class T> struct MST {  
     int n;
+	dsu d;
 	vector<pair<T, pair<int, int>>> chosen;
 	vector<pair<T, pair<int, int>>> edges;
-	dsu d;
-	MST() {}
-	MST(int _n) {
-		n = _n;
+	MST(int n = 0) : n(n) {
 		d = dsu(n);
 	}
 	void add_edge(int x, int y, T z) {
 		edges.push_back({z, {x, y}});
 	}
-	T mst() {
+	T cost() {
 		sort(edges.begin(), edges.end());
-		T res = 0;
+		T res = T();
         for (auto edge : edges) {
             if (d.merge(edge.second.first, edge.second.second)) {
                 chosen.push_back(edge);

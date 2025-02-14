@@ -1,12 +1,10 @@
 template <bool oneindexed = true> struct topsort {
+    int n;
     vector<vector<int>> edges;
     vector<int> indeg;
-    int n;
-
+    
     topsort() {}
-
-    topsort(int N) {
-        n = N;
+    topsort(int n) : n(n) {
         edges.resize(n);
         indeg.resize(n);
     }

@@ -1,91 +1,18 @@
-template <auto P>
-struct Mint {
-	using Mtype = decltype(P);
-	Mtype x;
+template <typename T> T modular_inverse(T a, T m) {
+    T u = 0, v = 1;
+    while (a != 0) {
+		T k = m / a;
+		m -= k * a;
+		u -= k * v;
+		swap(a, m);
+		swap(u, v);
+    }
+    assert(m == 1);
+    return u;
+}
 
-	Mint(int64_t _x = 0) : x(norm(_x)) {}
-
-    Mtype norm(int64_t k) {
-        if (!(-P <= k && k < P)) k %= P;
-        if (k < 0) k += P;
-        return k;
-    }
-
-    Mint<P> inv() const {
-        Mtype a = x, b = P, _x = 0, _y = 1;
-        while (a != 0) { 
-			Mtype k = b / a;
-			b -= k * a;
-			_x -= k * _y;
-			swap(a, b);
-			swap(_x, _y);
-		}
-        return Mint<P>(_x);
-    }
-
-    Mtype val() const {
-        return x;
-    }
-
-    explicit operator int() const { return x; }
-    explicit operator unsigned() const { return x; }
-    explicit operator int64_t() const { return x; }
-    explicit operator uint64_t() const { return x; }
-    explicit operator double() const { return x; }
-    explicit operator long double() const { return x; }
-
-    Mint<P> operator-() const {
-        return Mint<P>(-x);
-    }
-    Mint<P> &operator*=(const Mint<P> &rhs) {
-        x = int64_t(x) * rhs.x % P;
-        return *this;
-    }
-    Mint<P> &operator+=(const Mint<P> &rhs) {
-        x = norm(x + rhs.x);
-        return *this;
-    }
-    Mint<P> &operator-=(const Mint<P> &rhs) {
-        x = norm(x - rhs.x);
-        return *this;
-    }
-    Mint<P> &operator/=(const Mint<P> &rhs) {
-        return *this *= rhs.inv();
-    }
-    friend Mint<P> operator*(const Mint<P> &lhs, const Mint<P> &rhs) {
-        Mint<P> res = lhs;
-        res *= rhs;
-        return res;
-    }
-    friend Mint<P> operator+(const Mint<P> &lhs, const Mint<P> &rhs) {
-        Mint<P> res = lhs;
-        res += rhs;
-        return res;
-    }
-    friend Mint<P> operator-(const Mint<P> &lhs, const Mint<P> &rhs) {
-        Mint<P> res = lhs;
-        res -= rhs;
-        return res;
-    }
-    friend Mint<P> operator/(const Mint<P> &lhs, const Mint<P> &rhs) {
-        Mint<P> res = lhs;
-        res /= rhs;
-        return res;
-    }
-    friend istream &operator>>(istream &is, Mint<P> &a) {
-        int64_t v;
-        is >> v;
-        a = Mint<P>(v);
-        return is;
-    }
-    friend ostream &operator<<(ostream &os, const Mint<P> &a) {
-        return os << a.val();
-    }
-};
-
-template<auto P>
-Mint<P> power(Mint<P> a, int64_t b) {
-    Mint<P> res(1);
+template <typename T, typename U> T power(T a, U b) {
+	T res = 1;
     while (b) {
         if (b & 1) res *= a;
         a *= a;
@@ -94,16 +21,56 @@ Mint<P> power(Mint<P> a, int64_t b) {
     return res;
 }
 
-template<auto P>
-string to_string(const Mint<P> &x) { 
-	return to_string(x.val()); 
-}
+template <auto P> struct Mint {
+	using Mtype = decltype(P);
 
-template <const int &MOD>
+  public:
+	Mint(int64_t _x = 0) : x(norm(_x)) {}
+
+    explicit operator int() const { return x; }
+
+	Mint<P> inv() const { Mtype a = modular_inverse(x, P); return Mint<P>(a); }
+
+    Mint<P> operator-() const { return Mint<P>(-x); }
+
+    Mint<P> &operator+=(const Mint<P> &rhs) { x = norm(x + rhs.x); return *this; }
+    Mint<P> &operator-=(const Mint<P> &rhs) { x = norm(x - rhs.x); return *this; }
+    Mint<P> &operator*=(const Mint<P> &rhs) { x = int64_t(x) * rhs.x % P; return *this; }
+    Mint<P> &operator/=(const Mint<P> &rhs) { return *this *= rhs.inv(); }
+
+	Mint<P> &operator++() { return *this += 1; }
+	Mint<P> &operator--() { return *this -= 1; }
+
+	friend Mint<P> operator++(Mint<P> &lhs, int) { Mint<P> res = lhs; ++lhs; return res; }
+	friend Mint<P> operator--(Mint<P> &lhs, int) { Mint<P> res = lhs; --lhs; return res; }
+
+    friend Mint<P> operator+(const Mint<P> &lhs, const Mint<P> &rhs) { return Mint<P>(lhs) += rhs; }
+    friend Mint<P> operator-(const Mint<P> &lhs, const Mint<P> &rhs) { return Mint<P>(lhs) -= rhs; }
+    friend Mint<P> operator*(const Mint<P> &lhs, const Mint<P> &rhs) { return Mint<P>(lhs) *= rhs; }
+    friend Mint<P> operator/(const Mint<P> &lhs, const Mint<P> &rhs) { return Mint<P>(lhs) /= rhs; }
+
+    friend ostream &operator<<(ostream &os, const Mint<P> &a) { return os << a.x; }
+    friend istream &operator>>(istream &is, Mint<P> &a) { 
+		int64_t v;
+		is >> v;
+		a = Mint<P>(v);
+		return is; 
+	}
+
+  private:
+	Mtype x;
+    Mtype norm(int64_t k) {
+		if (!(-P <= k && k < P)) k %= P;
+		if (k < 0) k += P; 
+		return k;
+	}
+};
+
+const int MOD = int(1e9) + 7;
+using mint = Mint<MOD>;
+
 struct combinatorics {
-	using comb_int = Mint<MOD>;
-	vector<comb_int> fac, inv, ifac;
-
+	vector<mint> fac, inv, ifac;
 	combinatorics(int n = 1) {
 		fac.resize(n+1);
 		ifac.resize(n+1);
@@ -116,40 +83,12 @@ struct combinatorics {
 			ifac[i] = ifac[i - 1] * inv[i];
 		}
 	}
-
-	comb_int fact(int n) {
-		if (n < 0) return 0;
-		return fac[n];
-	}
-
-	comb_int inv_fact(int n) {
-		if (n < 0) return 0;
-		return ifac[n];
-	}
-
-	comb_int choose (int n, int k) {
+	mint nck(int n, int k) {
 		if (n < k || k < 0) return 0;
-		return fac[n] * ifac[n-k] * ifac[k];
+		return fac[n] * ifac[n-k] * ifac[k]; 
 	}
-
-	comb_int perm (int n, int k) {
+	mint npk(int n, int k) {
 		if (n < k || k < 0) return 0;
-		return fac[n] * ifac[n-k];
-		return 0;
+		return fac[n] * ifac[n-k]; 
 	}
-
-	comb_int inv_choose(int n, int k) {
-		assert(0 <= k && k <= n);
-		return ifac[n] * fac[n-k] * fac[k];
-	}
-
-	comb_int inv_perm(int n, int k) {
-		assert(0 <= k && k <= n);
-		return ifac[n] * fac[n-k];
-	}
-};
-
-const int MOD = int(1e9) + 7;
-
-const int N = int(1e6);
-combinatorics<MOD> comb(N);
+} comb(1e6);

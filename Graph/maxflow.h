@@ -1,3 +1,4 @@
+// Source: https://github.com/atcoder/ac-library
 template <class T> struct simple_queue {
     std::vector<T> payload;
     int pos = 0;
